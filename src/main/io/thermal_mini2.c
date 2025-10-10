@@ -9,10 +9,6 @@
 #include "config/parameter_group_ids.h"
 
 #include "drivers/time.h"
-#include "drivers/bus.h"
-#ifdef USE_I2C
-#include "drivers/bus_i2c.h"
-#endif
 
 #include "io/serial.h"
 #include "rx/rx.h"
@@ -25,10 +21,7 @@ static void pgResetFn_thermalMini2Config(thermalMini2Config_t *c)
 {
     memset(c, 0, sizeof(*c));
     c->enabled = false;
-    c->useI2C = true;
     c->serialPortId = SERIAL_PORT_NONE; // auto
-    c->i2cBus = 1;                      // use I2C bus 1 by default
-    c->i2cAddress = 0x00;               // set the module 7-bit address here
     c->auxZoomIndex = 1;                // AUX2 default as knob
     c->auxPaletteIndex = 0;             // AUX1 default as momentary
     c->defaultPalette = 0;              // White Hot
@@ -38,10 +31,6 @@ static void pgResetFn_thermalMini2Config(thermalMini2Config_t *c)
 // Preamble: 55 43 49 12, then 0x00, then Instruction Data, then 0x00 0x00 reserved, then CRC16-MODBUS (LSB first) of Instruction Data
 
 static serialPort_t *mini2Serial = NULL;
-#ifdef USE_I2C
-static I2CDevice mini2I2CDev = I2CINVALID;
-static uint8_t mini2I2CAddr = 0x00;
-#endif
 
 static uint8_t currentPaletteIndex = 0;
 static uint8_t paletteCodes[] = {
@@ -103,12 +92,6 @@ static void mini2SendFrame(const uint8_t *instr, uint32_t instrLen)
     if (mini2Serial) {
         serialWriteBuf(mini2Serial, buf, idx);
     }
-#ifdef USE_I2C
-    else if (mini2I2CDev != I2CINVALID) {
-        // If I2C is used, write the frame as-is (raw master transmit)
-        i2cWriteBuffer(mini2I2CDev, mini2I2CAddr, 0xFF, idx, buf, true);
-    }
-#endif
 }
 
 // Helpers to build specific commands
@@ -181,25 +164,7 @@ bool thermalMini2Init(void)
         return false;
     }
 
-    if (cfg->useI2C) {
-#ifdef USE_I2C
-        // Map numeric bus to I2CDEV enum; expect 1..3
-        if (cfg->i2cBus == 1) mini2I2CDev = I2CDEV_1;
-        else if (cfg->i2cBus == 2) mini2I2CDev = I2CDEV_2;
-        else if (cfg->i2cBus == 3) mini2I2CDev = I2CDEV_3;
-#if defined(USE_I2C_DEVICE_4)
-        else if (cfg->i2cBus == 4) mini2I2CDev = I2CDEV_4;
-#endif
-        else mini2I2CDev = I2CDEV_1; // default to bus 1
-
-        mini2I2CAddr = cfg->i2cAddress;
-        if (mini2I2CAddr != 0) {
-            i2cInit(mini2I2CDev);
-        }
-#endif
-    } else {
-        mini2Serial = openConfiguredSerial();
-    }
+    mini2Serial = openConfiguredSerial();
 
     // Initialize output format and default palette
     cmdSetAnalogPAL();
