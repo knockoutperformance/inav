@@ -39,7 +39,8 @@ static void pgResetFn_thermalMini2Config(thermalMini2Config_t *c)
 
 static serialPort_t *mini2Serial = NULL;
 #ifdef USE_I2C
-static i2cDevice_t mini2I2C = {0};
+static I2CDevice mini2I2CDev = I2CINVALID;
+static uint8_t mini2I2CAddr = 0x00;
 #endif
 
 static uint8_t currentPaletteIndex = 0;
@@ -103,9 +104,9 @@ static void mini2SendFrame(const uint8_t *instr, uint32_t instrLen)
         serialWriteBuf(mini2Serial, buf, idx);
     }
 #ifdef USE_I2C
-    else if (mini2I2C.bus) {
-        // If I2C is used, write the frame as-is
-        i2cWriteBuffer(&mini2I2C, buf, idx);
+    else if (mini2I2CDev != I2CINVALID) {
+        // If I2C is used, write the frame as-is (raw master transmit)
+        i2cWriteBuffer(mini2I2CDev, mini2I2CAddr, 0xFF, idx, buf, true);
     }
 #endif
 }
@@ -182,9 +183,18 @@ bool thermalMini2Init(void)
 
     if (cfg->useI2C) {
 #ifdef USE_I2C
-        if (cfg->i2cBus) {
-            mini2I2C.bus = (i2cBusDevice_t)cfg->i2cBus;
-            mini2I2C.address = cfg->i2cAddress;
+        // Map numeric bus to I2CDEV enum; expect 1..3
+        if (cfg->i2cBus == 1) mini2I2CDev = I2CDEV_1;
+        else if (cfg->i2cBus == 2) mini2I2CDev = I2CDEV_2;
+        else if (cfg->i2cBus == 3) mini2I2CDev = I2CDEV_3;
+#if defined(USE_I2C_DEVICE_4)
+        else if (cfg->i2cBus == 4) mini2I2CDev = I2CDEV_4;
+#endif
+        else mini2I2CDev = I2CDEV_1; // default to bus 1
+
+        mini2I2CAddr = cfg->i2cAddress;
+        if (mini2I2CAddr != 0) {
+            i2cInit(mini2I2CDev);
         }
 #endif
     } else {
