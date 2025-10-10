@@ -334,6 +334,9 @@ void taskUpdateAux(timeUs_t currentTimeUs)
 #else
     updateFixedWingLevelTrim(currentTimeUs);
 #endif
+
+    // Process Mini2 thermal device control (palette and zoom)
+    thermalMini2Process(currentTimeUs);
 }
 
 #ifdef USE_GEOZONE
