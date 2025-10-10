@@ -42,6 +42,7 @@
 #include "fc/fc_core.h"
 #include "fc/fc_msp.h"
 #include "fc/fc_tasks.h"
+#include "io/thermal_mini2.h"
 #include "fc/rc_controls.h"
 #include "fc/runtime_config.h"
 
