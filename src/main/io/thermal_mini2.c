@@ -25,10 +25,10 @@ static void pgResetFn_thermalMini2Config(thermalMini2Config_t *c)
 {
     memset(c, 0, sizeof(*c));
     c->enabled = false;
-    c->useI2C = false;
+    c->useI2C = true;
     c->serialPortId = SERIAL_PORT_NONE; // auto
-    c->i2cBus = 0;                      // auto / unused by default
-    c->i2cAddress = 0x00;               // vendor default unknown
+    c->i2cBus = 1;                      // use I2C bus 1 by default
+    c->i2cAddress = 0x00;               // set the module 7-bit address here
     c->auxZoomIndex = 1;                // AUX2 default as knob
     c->auxPaletteIndex = 0;             // AUX1 default as momentary
     c->defaultPalette = 0;              // White Hot
