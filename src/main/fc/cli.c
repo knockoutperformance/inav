@@ -79,6 +79,8 @@ bool cliMode = false;
 #include "fc/rc_modes.h"
 #include "fc/runtime_config.h"
 #include "fc/settings.h"
+#include "config/parameter_group_ids.h"
+#include "io/thermal_mini2.h"
 
 #include "flight/failsafe.h"
 #include "flight/imu.h"
@@ -4493,6 +4495,9 @@ static void printConfig(const char *cmdline, bool doDiff)
         cliPrintHashLine("Receiver: Channel map");
         printMap(dumpMask, &rxConfig_Copy, rxConfig());
 
+        cliPrintHashLine("thermal_mini2");
+        printThermalMini2(dumpMask, thermalMini2Config(), &thermalMini2Config_Copy);
+
         cliPrintHashLine("Ports");
         printSerial(dumpMask, &serialConfig_Copy, serialConfig());
 
@@ -4816,6 +4821,68 @@ static void printBootLog(char *cmdline __attribute__((unused))) {
 static void cliHelp(char *cmdline);
 
 // should be sorted a..z for bsearch()
+// Thermal Mini2 helpers
+static void printThermalMini2(uint8_t dumpMask, const thermalMini2Config_t *cfg, const thermalMini2Config_t *def)
+{
+    const char *fmt = "thermal_mini2 %u %d %u %u %u";
+    bool equalsDefault = false;
+    if (def) {
+        equalsDefault = (cfg->enabled == def->enabled)
+            && (cfg->serialPortId == def->serialPortId)
+            && (cfg->auxZoomIndex == def->auxZoomIndex)
+            && (cfg->auxPaletteIndex == def->auxPaletteIndex)
+            && (cfg->defaultPalette == def->defaultPalette);
+        cliDefaultPrintLinef(dumpMask, equalsDefault, fmt,
+            def->enabled,
+            def->serialPortId,
+            def->auxZoomIndex,
+            def->auxPaletteIndex,
+            def->defaultPalette
+        );
+    }
+    cliDumpPrintLinef(dumpMask, equalsDefault, fmt,
+        cfg->enabled,
+        cfg->serialPortId,
+        cfg->auxZoomIndex,
+        cfg->auxPaletteIndex,
+        cfg->defaultPalette
+    );
+}
+
+static void cliThermalMini2(char *cmdline)
+{
+    if (isEmpty(cmdline)) {
+        printThermalMini2(DUMP_MASTER, thermalMini2Config(), NULL);
+        return;
+    }
+    if (sl_strcasecmp(cmdline, "reset") == 0) {
+        const pgRegistry_t *reg = pgFind(PG_THERMAL_MINI2_CONFIG);
+        if (reg) pgResetCurrent(reg);
+        return;
+    }
+    const char *ptr = cmdline;
+    int enable = fastA2I(ptr);
+    ptr = nextArg(ptr);
+    int serialId = ptr ? fastA2I(ptr) : -1;
+    ptr = nextArg(ptr);
+    int auxZoom = ptr ? fastA2I(ptr) : -1;
+    ptr = nextArg(ptr);
+    int auxPal = ptr ? fastA2I(ptr) : -1;
+    ptr = nextArg(ptr);
+    int defPal = ptr ? fastA2I(ptr) : -1;
+
+    if (enable < 0 || enable > 1 || auxZoom < 0 || auxPal < 0 || defPal < 0) {
+        cliShowParseError();
+        return;
+    }
+    thermalMini2Config_t *cfg = thermalMini2ConfigMutable();
+    cfg->enabled = enable;
+    cfg->serialPortId = serialId; // -1 = auto
+    cfg->auxZoomIndex = (uint8_t)auxZoom;
+    cfg->auxPaletteIndex = (uint8_t)auxPal;
+    cfg->defaultPalette = (uint8_t)defPal;
+}
+
 const clicmd_t cmdTable[] = {
     CLI_COMMAND_DEF("adjrange", "configure adjustment ranges", NULL, cliAdjustmentRange),
 #if defined(USE_ASSERT)
@@ -4935,6 +5002,7 @@ const clicmd_t cmdTable[] = {
     CLI_COMMAND_DEF("temp_sensor", "change temp sensor settings", NULL, cliTempSensor),
 #endif
     CLI_COMMAND_DEF("version", "show version", NULL, cliVersion),
+    CLI_COMMAND_DEF("thermal_mini2", "configure thermal mini2 (enable serial auxZoom auxPalette defaultPalette)", NULL, cliThermalMini2),
 #if defined(NAV_NON_VOLATILE_WAYPOINT_STORAGE) && defined(NAV_NON_VOLATILE_WAYPOINT_CLI)
     CLI_COMMAND_DEF("wp", "waypoint list", NULL, cliWaypoints),
 #endif
