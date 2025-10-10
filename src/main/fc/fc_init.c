@@ -116,6 +116,7 @@
 #include "io/osd.h"
 #include "io/osd_dji_hd.h"
 #include "io/rcdevice_cam.h"
+#include "io/thermal_mini2.h"
 #include "io/serial.h"
 #include "io/displayport_msp.h"
 #include "io/smartport_master.h"
@@ -691,6 +692,9 @@ void init(void)
 #ifdef USE_RCDEVICE
     rcdeviceInit();
 #endif // USE_RCDEVICE
+
+    // Initialize Mini2 thermal module control if enabled
+    thermalMini2Init();
 
 #ifdef USE_DSHOT
     initDShotCommands();
