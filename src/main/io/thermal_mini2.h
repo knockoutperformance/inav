@@ -10,10 +10,7 @@
 // Configuration for Mini2 thermal module control
 typedef struct thermalMini2Config_s {
     bool     enabled;                 // Enable Mini2 control
-    bool     useI2C;                  // If true, use I2C instead of UART
     int8_t   serialPortId;            // serialPortIdentifier_e (SERIAL_PORT_NONE to auto)
-    uint8_t  i2cBus;                  // I2CDEV_n if applicable
-    uint8_t  i2cAddress;              // I2C address when using I2C
     uint8_t  auxZoomIndex;            // 0..(MAX_AUX_CHANNEL_COUNT-1) index for zoom knob
     uint8_t  auxPaletteIndex;         // 0..(MAX_AUX_CHANNEL_COUNT-1) index for palette momentary switch
     uint8_t  defaultPalette;          // default palette code (0 = White Hot)
