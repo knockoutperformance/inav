@@ -4988,8 +4988,6 @@ const clicmd_t cmdTable[] = {
     CLI_COMMAND_DEF("fwapproach", "Fixed Wing Approach Settings", NULL, cliFwAutolandApproach),
 #endif
     CLI_COMMAND_DEF("get", "get variable value", "[name]", cliGet),
-    CLI_COMMAND_DEF("thermal_mini2", "configure thermal mini2 (enabled serialId auxZoom auxPalette defaultPalette)", NULL, cliThermalMini2),
-    CLI_COMMAND_DEF("thermal_mini2_ffc", "configure thermal mini2 FFC (mode aux minIntervalMs onBoot allowRcWhileArmed)", NULL, cliThermalMini2Ffc),
 #ifdef USE_GEOZONE
     CLI_COMMAND_DEF("geozone", "get or set geo zones", NULL, cliGeozone),
 #endif
@@ -5056,6 +5054,7 @@ const clicmd_t cmdTable[] = {
 #endif
     CLI_COMMAND_DEF("version", "show version", NULL, cliVersion),
     CLI_COMMAND_DEF("thermal_mini2", "configure thermal mini2 (enable serial auxZoom auxPalette defaultPalette)", NULL, cliThermalMini2),
+    CLI_COMMAND_DEF("thermal_mini2_ffc", "configure thermal mini2 FFC (mode aux minIntervalMs onBoot allowRcWhileArmed)", NULL, cliThermalMini2Ffc),
 #if defined(NAV_NON_VOLATILE_WAYPOINT_STORAGE) && defined(NAV_NON_VOLATILE_WAYPOINT_CLI)
     CLI_COMMAND_DEF("wp", "waypoint list", NULL, cliWaypoints),
 #endif
