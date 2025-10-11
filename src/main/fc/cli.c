@@ -82,6 +82,8 @@ bool cliMode = false;
 #include "config/parameter_group_ids.h"
 #include "io/thermal_mini2.h"
 
+static void printThermalMini2(uint8_t dumpMask, const thermalMini2Config_t *cfg, const thermalMini2Config_t *def);
+
 #include "flight/failsafe.h"
 #include "flight/imu.h"
 #include "flight/mixer_profile.h"
