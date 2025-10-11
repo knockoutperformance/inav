@@ -4841,6 +4841,13 @@ static void printThermalMini2(uint8_t dumpMask, const thermalMini2Config_t *cfg,
             def->auxPaletteIndex,
             def->defaultPalette
         );
+        cliDefaultPrintLinef(dumpMask, false, "thermal_mini2_ffc %u %u %u %u %u",
+            def->ffcMode,
+            def->ffcAuxIndex,
+            def->ffcMinIntervalMs,
+            def->ffcOnBoot,
+            def->allowRcWhileArmed
+        );
     }
     cliDumpPrintLinef(dumpMask, equalsDefault, fmt,
         cfg->enabled,
@@ -4848,6 +4855,13 @@ static void printThermalMini2(uint8_t dumpMask, const thermalMini2Config_t *cfg,
         cfg->auxZoomIndex,
         cfg->auxPaletteIndex,
         cfg->defaultPalette
+    );
+    cliDumpPrintLinef(dumpMask, false, "thermal_mini2_ffc %u %u %u %u %u",
+        cfg->ffcMode,
+        cfg->ffcAuxIndex,
+        cfg->ffcMinIntervalMs,
+        cfg->ffcOnBoot,
+        cfg->allowRcWhileArmed
     );
 }
 
@@ -4883,6 +4897,41 @@ static void cliThermalMini2(char *cmdline)
     cfg->auxZoomIndex = (uint8_t)auxZoom;
     cfg->auxPaletteIndex = (uint8_t)auxPal;
     cfg->defaultPalette = (uint8_t)defPal;
+}
+
+static void cliThermalMini2Ffc(char *cmdline)
+{
+    if (isEmpty(cmdline)) {
+        const thermalMini2Config_t *cfg = thermalMini2Config();
+        cliPrintLinef("thermal_mini2_ffc %u %u %u %u %u",
+            cfg->ffcMode,
+            cfg->ffcAuxIndex,
+            cfg->ffcMinIntervalMs,
+            cfg->ffcOnBoot,
+            cfg->allowRcWhileArmed);
+        return;
+    }
+    const char *ptr = cmdline;
+    int mode = fastA2I(ptr);
+    ptr = nextArg(ptr);
+    int aux = ptr ? fastA2I(ptr) : -1;
+    ptr = nextArg(ptr);
+    int interval = ptr ? fastA2I(ptr) : -1;
+    ptr = nextArg(ptr);
+    int onboot = ptr ? fastA2I(ptr) : -1;
+    ptr = nextArg(ptr);
+    int allowArmed = ptr ? fastA2I(ptr) : -1;
+
+    if (mode < 0 || mode > 2 || aux < 0 || interval < 0 || onboot < 0 || allowArmed < 0) {
+        cliShowParseError();
+        return;
+    }
+    thermalMini2Config_t *cfg = thermalMini2ConfigMutable();
+    cfg->ffcMode = (uint8_t)mode;
+    cfg->ffcAuxIndex = (uint8_t)aux;
+    cfg->ffcMinIntervalMs = (uint16_t)interval;
+    cfg->ffcOnBoot = onboot != 0;
+    cfg->allowRcWhileArmed = allowArmed != 0;
 }
 
 const clicmd_t cmdTable[] = {
@@ -4939,6 +4988,8 @@ const clicmd_t cmdTable[] = {
     CLI_COMMAND_DEF("fwapproach", "Fixed Wing Approach Settings", NULL, cliFwAutolandApproach),
 #endif
     CLI_COMMAND_DEF("get", "get variable value", "[name]", cliGet),
+    CLI_COMMAND_DEF("thermal_mini2", "configure thermal mini2 (enabled serialId auxZoom auxPalette defaultPalette)", NULL, cliThermalMini2),
+    CLI_COMMAND_DEF("thermal_mini2_ffc", "configure thermal mini2 FFC (mode aux minIntervalMs onBoot allowRcWhileArmed)", NULL, cliThermalMini2Ffc),
 #ifdef USE_GEOZONE
     CLI_COMMAND_DEF("geozone", "get or set geo zones", NULL, cliGeozone),
 #endif
